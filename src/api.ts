@@ -33,3 +33,91 @@ export const logOut = () =>
       },
     })
     .then((response) => response.data);
+
+export const githubLogIn = (code: string) =>
+  instance
+    .post(
+      `/users/github`,
+      { code },
+      {
+        headers: {
+          "X-CSRFToken": Cookie.get("csrftoken") || "",
+        },
+      }
+    )
+    .then((response) => response.status);
+
+export const kakaoLogIn = (code: string) =>
+  instance
+    .post(
+      `/users/kakao`,
+      { code },
+      {
+        headers: {
+          "X-CSRFToken": Cookie.get("csrftoken") || "",
+        },
+      }
+    )
+    .then((response) => response.status);
+
+export interface IUsernameLoginVariables {
+  username: string;
+  password: string;
+}
+export interface IUsernameLoginSuccess {
+  ok: string;
+}
+export interface IUsernameLoginError {
+  error: string;
+}
+
+export const usernameLogin = ({
+  username,
+  password,
+}: IUsernameLoginVariables) =>
+  instance.post(
+    `/users/log-in`,
+    { username, password },
+    {
+      headers: {
+        "X-CSRFToken": Cookie.get("csrftoken") || "",
+      },
+    }
+  );
+
+export interface IUsernameSignUpVariables {
+  username: string;
+  password: string;
+  name: string;
+  email: string;
+  currency: string;
+  gender: string;
+  language: string;
+}
+
+export const usernameSignUp = ({
+  username,
+  password,
+  name,
+  email,
+  currency,
+  gender,
+  language,
+}: IUsernameSignUpVariables) =>
+  instance
+    .post(
+      `users/`,
+      { username, password, name, email, currency, gender, language },
+      {
+        headers: {
+          "X-CSRFToken": Cookie.get("csrftoken") || "",
+        },
+      }
+    )
+    .then((response) => response.data);
+
+export const getAmenities = () =>
+  instance.get(`rooms/amenities`).then((response) => response.data);
+
+export const getCategories = () =>
+  instance.get(`categories`).then((response) => response.data);

@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  HStack,
   IconButton,
   useDisclosure,
   LightMode,
@@ -14,6 +13,8 @@ import {
   MenuList,
   useToast,
   Flex,
+  ToastId,
+  MenuItem,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { FaAirbnb, FaMoon, FaSun } from "react-icons/fa";
@@ -21,7 +22,8 @@ import LoginModal from "./LoginModal";
 import SignUpModal from "./SignUpModal";
 import useUser from "../lib/useUser";
 import { logOut } from "../api";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 
 export default function Header() {
   const { userLoading, isLoggedIn, user } = useUser();
@@ -40,20 +42,30 @@ export default function Header() {
   const Icon = useColorModeValue(FaMoon, FaSun);
   const toast = useToast();
   const queryClient = useQueryClient();
+  const toastId = useRef<ToastId>();
+  const mutation = useMutation(logOut, {
+    onMutate: () => {
+      toastId.current = toast({
+        title: "Login out...",
+        description: "ongoing Log out...",
+        status: "loading",
+        duration: 10000,
+        position: "bottom-right",
+      });
+    },
+    onSuccess: () => {
+      if (toastId.current) {
+        queryClient.refetchQueries(["me"]);
+        toast.update(toastId.current, {
+          status: "success",
+          title: "Done!",
+          description: "See you later!",
+        });
+      }
+    },
+  });
   const onLogout = async () => {
-    const toastId = toast({
-      title: "Login out...",
-      description: "ongoing Log out...",
-      status: "loading",
-      position: "bottom-right",
-    });
-    await logOut();
-    queryClient.refetchQueries(["me"]);
-    toast.update(toastId, {
-      status: "success",
-      title: "Done!",
-      description: "See you later!",
-    });
+    mutation.mutate();
   };
   return (
     <Stack
@@ -98,7 +110,14 @@ export default function Header() {
               <MenuButton>
                 <Avatar name={user?.name} src={user?.avatar} size={"md"} />
               </MenuButton>
-              <MenuList onClick={onLogout}>Log out</MenuList>
+              <MenuList textAlign={"center"}>
+                {user?.is_host ? (
+                  <Link to="/rooms/upload">
+                    <MenuItem>Upload room</MenuItem>
+                  </Link>
+                ) : null}
+                <MenuItem onClick={onLogout}>Log out</MenuItem>
+              </MenuList>
             </Menu>
           )
         ) : null}
